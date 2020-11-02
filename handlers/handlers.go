@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+const AccessTokenHeader = "X-ACCESS-TOKEN"
+
 // RootHandler returns an empty body status code
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
@@ -32,8 +34,19 @@ func ListWinners(w http.ResponseWriter, r *http.Request) {
 }
 
 // AddNewWinner adds new winner to the list
-func AddNewWinner(res http.ResponseWriter, req *http.Request) {
-
+func AddNewWinner(w http.ResponseWriter, r *http.Request) {
+	tk := r.Header.Get(AccessTokenHeader)
+	ok := data.IsAccessTokenValid(tk)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	err := data.AddNewWinner(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 // WinnersHandler is the dispatcher for all /winners URL
